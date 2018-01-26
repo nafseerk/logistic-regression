@@ -10,6 +10,7 @@ class LogisticRegression:
         self.y_map = {5.0: 1, 6.0: 0}
         self.w_bar = None
         self.max_iterations = 50
+        self.train_accuracy = None
 
     def sigmoid(self, x):
         power = -1 * np.add(np.matmul(np.transpose(self.w_bar[1:]), x), self.w_bar[0, 0])
@@ -45,8 +46,9 @@ class LogisticRegression:
             H_inv = np.linalg.inv(H)
             self.w_bar = self.w_bar - np.matmul(H_inv, gradient)
 
-        print('Shape of w_bar =', self.w_bar.shape)
-        print(self.w_bar)
+        if report_acc:
+            self.train_accuracy = self.k_fold_cross_validation(full_dataset)
+            print('Training Accuracy = %.2f %%' % self.train_accuracy)
 
     def classify_point(self, x):
         prob_y_given_x = self.sigmoid(x)[0][0]
@@ -69,7 +71,6 @@ class LogisticRegression:
             predicted_labels.append(predicted_label)
             if not true_labels.empty:
                 true_label = true_labels.iat[i, 0]
-                print('Predicted Label =', predicted_label, 'True Label =', true_label)
                 if predicted_label == true_label:
                     correct += 1
 
@@ -80,11 +81,20 @@ class LogisticRegression:
         predicted_labels = pd.DataFrame(np.array(predicted_labels))
         return predicted_labels, accuracy
 
+    def k_fold_cross_validation(self, dataset, k=10):
+        avg_accuracy = 0.0
+        for i in range(k):
+            test_attrs, test_labels = dataset.pop(0)
+            accuracy = self.classify(test_attrs, true_labels=test_labels)[1]
+            dataset.append((test_attrs, test_labels))
+            avg_accuracy += accuracy
+        return avg_accuracy / k
+
 
 if __name__ == '__main__':
     full_dataset = DataLoader.load_full_dataset('./dataset')
-    #log_reg = LogisticRegression(M=64)
-    #log_reg.learn(full_dataset)
+    log_reg = LogisticRegression(M=64)
+    log_reg.learn(full_dataset, report_acc=True)
 
     # Test the model with test data taken from training data
     train_dataset, test_attrs, test_labels = DataLoader.load_with_test_data(
@@ -92,7 +102,7 @@ if __name__ == '__main__':
         split_ratio=0.1)
 
     log_reg = LogisticRegression(M=64)
-    log_reg.learn(full_dataset)
+    log_reg.learn(train_dataset)
     predictions, acc = log_reg.classify(test_attrs, true_labels=test_labels)
 
     print('Test Accuracy = %.2f %%' % acc)
