@@ -9,7 +9,7 @@ class LogisticRegression:
         self.M = M
         self.y_map = {5.0: 1, 6.0: 0}
         self.w_bar = None
-        self.max_iterations = 10
+        self.max_iterations = 50
 
     def sigmoid(self, x):
         power = -1 * np.add(np.matmul(np.transpose(self.w_bar[1:]), x), self.w_bar[0, 0])
@@ -39,6 +39,7 @@ class LogisticRegression:
         # TODO - set initial values for weights
         self.w_bar = np.zeros((self.M + 1, 1))
 
+        # TODO - add logic for convergence check
         for i in range(self.max_iterations):
             H, gradient = self.get_gradient_and_hessian(dataset)
             H_inv = np.linalg.inv(H)
