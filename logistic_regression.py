@@ -67,6 +67,31 @@ class LogisticRegression:
             if yi == y:
                 return label
 
+    # Returns the value of the equation of the separating hyperplane
+    def get_equation_value(self, x):
+        x_bar = np.append(1, x)
+        val = np.matmul(np.transpose(self.w_bar), x_bar)
+        return val
+
+    # For each point in the dataset, check on which side of the hyperplane, the point lies
+    def do_experiment(self, test_attrs, true_labels=None):
+        N = len(test_attrs)
+        if not true_labels.empty:
+            if len(test_attrs) != len(true_labels):
+                raise ValueError('count mismatch in attributes and labels')
+
+        below = []
+        above = []
+        for i, row in test_attrs.iterrows():
+            xi = row.values.reshape((self.M, 1))
+            val = self.get_equation_value(xi)
+            if val < 0:
+                below.append(true_labels.iat[i, 0])
+            else:
+                above.append(true_labels.iat[i, 0])
+
+        return below, above
+
     def classify(self, test_attrs, true_labels=None):
         N = len(test_attrs)
         if not true_labels.empty:
@@ -120,3 +145,10 @@ if __name__ == '__main__':
     log_reg.learn(full_dataset)
 
     log_reg.summary()
+
+    attrs, labels = DataLoader.load_merged_dataset('./dataset')
+    below, above = log_reg.do_experiment(attrs, true_labels=labels)
+    print('No of points in class 5 below hyperplane= %d' % below.count(5.0))
+    print('No of points in class 6 below hyperplane= %d' % below.count(6.0))
+    print('No of points in class 5 above hyperplane= %d' % above.count(5.0))
+    print('No of points in class 6 above hyperplane= %d' % above.count(6.0))

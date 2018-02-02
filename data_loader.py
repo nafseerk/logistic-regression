@@ -44,6 +44,26 @@ class DataLoader:
         return full_dataset
 
     @classmethod
+    def load_merged_dataset(cls, dataset_root_directory):
+        """
+        :param dataset_root_directory: root directory containing all dataset files
+        :return a list of 2-tuples (attributes, labels) of dataframes
+        Loads data from a collection of files
+        """
+
+        attributes_group = []
+        labels_group = []
+        for i in range(1, DataLoader.num_files + 1):
+            attributes, labels = DataLoader.load_dataset(
+                dataset_root_directory + '/data' + str(i) + '.csv',
+                dataset_root_directory + '/labels' + str(i) + '.csv'
+            )
+            attributes_group.append(attributes)
+            labels_group.append(labels)
+
+        return pd.concat(attributes_group, ignore_index=True), pd.concat(labels_group, ignore_index=True)
+
+    @classmethod
     def load_with_test_data(cls, dataset_root_directory, split_ratio=0.1):
         """
         :param dataset_root_directory: root directory containing all dataset files
